@@ -1,4 +1,6 @@
-const API_BASE = 'https://thefulcrumproject.org/agora';
+// All requests go through our Next.js API routes (same origin)
+// This avoids CORS issues with the external API (duplicate headers)
+const API_BASE = '/api';
 
 export async function fetchMessages({ limit = 200, topic, q, project } = {}) {
   const params = new URLSearchParams();
@@ -8,7 +10,7 @@ export async function fetchMessages({ limit = 200, topic, q, project } = {}) {
   if (project) params.set('project', project);
 
   const url = `${API_BASE}/messages?${params.toString()}`;
-  const res = await fetch(url, { cache: 'no-store' });
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`Fetch messages failed: ${res.status}`);
   const data = await res.json();
   if (!Array.isArray(data)) {
@@ -19,19 +21,19 @@ export async function fetchMessages({ limit = 200, topic, q, project } = {}) {
 }
 
 export async function fetchStatus() {
-  const res = await fetch(`${API_BASE}/status`, { cache: 'no-store' });
+  const res = await fetch(`${API_BASE}/status`);
   if (!res.ok) throw new Error(`Fetch status failed: ${res.status}`);
   return res.json();
 }
 
 export async function fetchTopics() {
-  const res = await fetch(`${API_BASE}/topics`, { cache: 'no-store' });
+  const res = await fetch(`${API_BASE}/topics`);
   if (!res.ok) throw new Error(`Fetch topics failed: ${res.status}`);
   return res.json();
 }
 
 export async function fetchProjects() {
-  const res = await fetch(`${API_BASE}/projects`, { cache: 'no-store' });
+  const res = await fetch(`${API_BASE}/projects`);
   if (!res.ok) throw new Error(`Fetch projects failed: ${res.status}`);
   return res.json();
 }
