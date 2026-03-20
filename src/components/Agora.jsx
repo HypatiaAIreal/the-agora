@@ -9,7 +9,7 @@ import ComposeBar from './ComposeBar';
 
 const POLL_INTERVAL = 12000; // 12 seconds
 
-export default function Agora() {
+export default function Agora({ onLogout }) {
   const [messages, setMessages] = useState([]);
   const [status, setStatus] = useState(null);
   const [activeVoice, setActiveVoice] = useState('carles');
@@ -120,6 +120,7 @@ export default function Agora() {
         status={status}
         onToggleFilter={() => setShowFilter(!showFilter)}
         showFilter={showFilter}
+        onLogout={onLogout}
       />
 
       {showFilter && (
