@@ -1,0 +1,40 @@
+'use client';
+
+import { VOICES, VOICE_KEYS } from '../lib/constants';
+
+export default function VoiceSelector({ activeVoice, onSelect }) {
+  return (
+    <div className="flex gap-2 flex-wrap">
+      {VOICE_KEYS.map((key) => {
+        const voice = VOICES[key];
+        const isActive = activeVoice === key;
+
+        return (
+          <button
+            key={key}
+            onClick={() => onSelect(key)}
+            className="voice-btn"
+            style={{
+              '--voice-color': voice.color,
+              borderColor: isActive ? voice.color : 'rgba(255,255,255,0.06)',
+              background: isActive
+                ? `color-mix(in srgb, ${voice.color} 10%, transparent)`
+                : 'rgba(255, 255, 255, 0.03)',
+              boxShadow: isActive
+                ? `0 0 20px color-mix(in srgb, ${voice.color} 15%, transparent)`
+                : 'none',
+            }}
+          >
+            <span className="text-base">{voice.emoji}</span>
+            <span
+              className="text-xs font-medium hidden sm:inline"
+              style={{ color: isActive ? voice.color : '#7a7580' }}
+            >
+              {voice.name}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
