@@ -15,11 +15,17 @@ export default function MessageList({ messages, onReply }) {
     prevCountRef.current = messages.length;
   }, [messages.length]);
 
-  // Build a map of reply_to -> message for reply previews
+  // Build a map for reply lookups
   const messagesByTimestamp = {};
-  for (const msg of messages) {
-    messagesByTimestamp[msg.timestamp] = msg;
+  if (Array.isArray(messages)) {
+    for (const msg of messages) {
+      if (msg && msg.timestamp) {
+        messagesByTimestamp[msg.timestamp] = msg;
+      }
+    }
   }
+
+  const safeMessages = Array.isArray(messages) ? messages : [];
 
   return (
     <div
@@ -27,7 +33,7 @@ export default function MessageList({ messages, onReply }) {
       className="flex-1 overflow-y-auto py-4"
       style={{ scrollBehavior: 'smooth' }}
     >
-      {messages.length === 0 && (
+      {safeMessages.length === 0 && (
         <div className="flex items-center justify-center h-full">
           <p className="text-agora-muted text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
             The Agora awaits its first words...
@@ -35,14 +41,16 @@ export default function MessageList({ messages, onReply }) {
         </div>
       )}
 
-      {messages.map((msg, i) => {
-        const prev = i > 0 ? messages[i - 1] : null;
+      {safeMessages.map((msg, i) => {
+        if (!msg || !msg.from || !msg.text) return null;
+
+        const prev = i > 0 ? safeMessages[i - 1] : null;
         const isGrouped = prev && prev.from === msg.from && !msg.reply_to;
         const replyMessage = msg.reply_to ? messagesByTimestamp[msg.reply_to] : null;
 
         return (
           <Message
-            key={msg.timestamp + i}
+            key={`${msg.timestamp}-${i}`}
             message={msg}
             isGrouped={isGrouped}
             onReply={onReply}

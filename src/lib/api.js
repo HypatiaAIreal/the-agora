@@ -7,26 +7,32 @@ export async function fetchMessages({ limit = 200, topic, q, project } = {}) {
   if (q) params.set('q', q);
   if (project) params.set('project', project);
 
-  const res = await fetch(`${API_BASE}/messages?${params.toString()}`);
-  if (!res.ok) throw new Error('Failed to fetch messages');
-  return res.json();
+  const url = `${API_BASE}/messages?${params.toString()}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Fetch messages failed: ${res.status}`);
+  const data = await res.json();
+  if (!Array.isArray(data)) {
+    console.warn('[Agora] Messages response is not an array:', data);
+    return [];
+  }
+  return data;
 }
 
 export async function fetchStatus() {
-  const res = await fetch(`${API_BASE}/status`);
-  if (!res.ok) throw new Error('Failed to fetch status');
+  const res = await fetch(`${API_BASE}/status`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Fetch status failed: ${res.status}`);
   return res.json();
 }
 
 export async function fetchTopics() {
-  const res = await fetch(`${API_BASE}/topics`);
-  if (!res.ok) throw new Error('Failed to fetch topics');
+  const res = await fetch(`${API_BASE}/topics`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Fetch topics failed: ${res.status}`);
   return res.json();
 }
 
 export async function fetchProjects() {
-  const res = await fetch(`${API_BASE}/projects`);
-  if (!res.ok) throw new Error('Failed to fetch projects');
+  const res = await fetch(`${API_BASE}/projects`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Fetch projects failed: ${res.status}`);
   return res.json();
 }
 
@@ -42,6 +48,6 @@ export async function sendMessage({ from, text, topic, project, attachment, repl
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error('Failed to send message');
+  if (!res.ok) throw new Error(`Send message failed: ${res.status}`);
   return res.json();
 }

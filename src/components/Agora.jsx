@@ -7,7 +7,7 @@ import FilterBar from './FilterBar';
 import MessageList from './MessageList';
 import ComposeBar from './ComposeBar';
 
-const POLL_INTERVAL = 12000; // 12 seconds
+const POLL_INTERVAL = 12000;
 
 export default function Agora({ onLogout }) {
   const [messages, setMessages] = useState([]);
@@ -18,8 +18,15 @@ export default function Agora({ onLogout }) {
   const [showFilter, setShowFilter] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [newCount, setNewCount] = useState(0);
   const lastSeenCountRef = useRef(0);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const loadMessages = useCallback(async () => {
     try {
@@ -27,26 +34,33 @@ export default function Agora({ onLogout }) {
       if (activeTopic) params.topic = activeTopic;
       if (searchQuery) params.q = searchQuery;
       const msgs = await fetchMessages(params);
-      setMessages(msgs);
+      if (!mountedRef.current) return;
 
-      // Track unread
+      setMessages(msgs);
+      setError(null);
+
       if (msgs.length > lastSeenCountRef.current && lastSeenCountRef.current > 0) {
         setNewCount(msgs.length - lastSeenCountRef.current);
       }
       lastSeenCountRef.current = msgs.length;
     } catch (err) {
-      console.error('Failed to load messages:', err);
+      console.error('[Agora] loadMessages error:', err);
+      if (mountedRef.current) {
+        setError(`Could not load messages: ${err.message}`);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [activeTopic, searchQuery]);
 
   const loadStatus = useCallback(async () => {
     try {
       const s = await fetchStatus();
-      setStatus(s);
+      if (mountedRef.current) setStatus(s);
     } catch (err) {
-      console.error('Failed to load status:', err);
+      console.error('[Agora] loadStatus error:', err);
     }
   }, []);
 
@@ -65,7 +79,7 @@ export default function Agora({ onLogout }) {
     return () => clearInterval(interval);
   }, [loadMessages, loadStatus]);
 
-  // Reset new count when user interacts
+  // Reset new count on filter change
   useEffect(() => {
     setNewCount(0);
   }, [activeTopic, searchQuery]);
@@ -74,11 +88,15 @@ export default function Agora({ onLogout }) {
     try {
       await sendMessage(msgData);
       setReplyTo(null);
-      // Immediate refresh
+    } catch (err) {
+      console.error('[Agora] sendMessage error:', err);
+    }
+    // Always refresh after send attempt, even if send failed
+    try {
       await loadMessages();
       await loadStatus();
     } catch (err) {
-      console.error('Failed to send message:', err);
+      console.error('[Agora] refresh after send error:', err);
     }
   };
 
@@ -86,7 +104,7 @@ export default function Agora({ onLogout }) {
     setReplyTo(msg);
   };
 
-  // Update document title with unread count
+  // Tab title with unread count
   useEffect(() => {
     document.title = newCount > 0
       ? `(${newCount}) The Agora \u2014 Four Voices \u00b7 One Space`
@@ -130,6 +148,30 @@ export default function Agora({ onLogout }) {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
+      )}
+
+      {/* Error banner */}
+      {error && (
+        <div className="text-center py-2 px-4">
+          <span
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs"
+            style={{
+              background: 'rgba(239, 83, 80, 0.1)',
+              color: '#ef5350',
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '0.7rem',
+              border: '1px solid rgba(239, 83, 80, 0.2)',
+            }}
+          >
+            {error}
+            <button
+              onClick={() => { setError(null); loadMessages(); }}
+              className="underline hover:no-underline ml-2"
+            >
+              retry
+            </button>
+          </span>
+        </div>
       )}
 
       {/* Unread indicator */}
