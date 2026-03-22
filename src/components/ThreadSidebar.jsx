@@ -23,16 +23,7 @@ export default function ThreadSidebar({
   sidebarOpen,
   onCloseSidebar,
 }) {
-  const generalThread = {
-    id: null,
-    title: 'General',
-    created_by: null,
-    message_count: null,
-    last_message: null,
-    topic: null,
-  };
-
-  const allThreads = [generalThread, ...threads];
+  const allThreads = threads;
 
   return (
     <>
@@ -85,7 +76,7 @@ export default function ThreadSidebar({
 
             return (
               <button
-                key={thread.id ?? 'general'}
+                key={thread.id}
                 onClick={() => {
                   onSelectThread(thread.id);
                   onCloseSidebar();
@@ -104,7 +95,7 @@ export default function ThreadSidebar({
                       fontFamily: "'DM Sans', sans-serif",
                     }}
                   >
-                    {thread.id === null ? '💬 ' : ''}{thread.title}
+                    {thread.title}
                   </span>
                   {thread.message_count != null && (
                     <span

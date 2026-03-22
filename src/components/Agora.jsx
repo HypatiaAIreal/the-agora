@@ -67,6 +67,13 @@ export default function Agora() {
         return bTime.localeCompare(aTime);
       });
       setThreads(t);
+      // Auto-select first thread (General) if none selected yet
+      setActiveThreadId((prev) => {
+        if (prev) return prev;
+        // Prefer the "General" thread, otherwise first thread
+        const general = t.find((th) => th.title === 'General');
+        return general?.id || t[0]?.id || null;
+      });
     } catch (err) {
       console.error('Failed to load threads:', err);
     }
@@ -99,7 +106,7 @@ export default function Agora() {
     try {
       await sendMessage({
         ...msgData,
-        thread_id: activeThreadId || undefined,
+        thread_id: activeThreadId,
       });
       setReplyTo(null);
       // Immediate refresh
@@ -181,9 +188,7 @@ export default function Agora() {
           showFilter={showFilter}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           activeThreadTitle={
-            activeThreadId
-              ? threads.find((t) => t.id === activeThreadId)?.title
-              : 'General'
+            threads.find((t) => t.id === activeThreadId)?.title || null
           }
         />
 
