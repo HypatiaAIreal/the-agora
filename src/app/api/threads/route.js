@@ -1,0 +1,17 @@
+const API_BASE = 'https://thefulcrumproject.org/agora';
+
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const params = new URLSearchParams();
+  for (const [key, value] of searchParams.entries()) {
+    params.set(key, value);
+  }
+  const res = await fetch(`${API_BASE}/threads?${params.toString()}`, {
+    headers: { 'Accept': 'application/json' },
+  });
+  const data = await res.text();
+  return new Response(data, {
+    status: res.status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
