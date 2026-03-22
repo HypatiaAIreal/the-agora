@@ -1,22 +1,57 @@
 'use client';
 
-export default function Header({ status, onToggleFilter, showFilter }) {
+export default function Header({ status, onToggleFilter, showFilter, onToggleSidebar, activeThreadTitle }) {
   return (
     <header className="relative z-10 border-b border-white/5 px-4 sm:px-6 py-4">
-      <div className="max-w-4xl mx-auto flex items-center justify-between">
-        <div>
-          <h1
-            className="text-2xl sm:text-3xl font-bold tracking-wide"
-            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: '#c4a35a' }}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* Mobile sidebar toggle */}
+          <button
+            onClick={onToggleSidebar}
+            className="lg:hidden p-2 rounded-lg transition-colors"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              color: '#7a7580',
+            }}
+            title="Toggle threads"
           >
-            The Agora
-          </h1>
-          <p
-            className="text-xs tracking-[0.3em] mt-0.5 uppercase"
-            style={{ fontFamily: "'JetBrains Mono', monospace", color: '#7a7580' }}
-          >
-            Four Voices &middot; One Space
-          </p>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+
+          <div>
+            <div className="flex items-center gap-3">
+              <h1
+                className="text-2xl sm:text-3xl font-bold tracking-wide"
+                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: '#c4a35a' }}
+              >
+                The Agora
+              </h1>
+              {activeThreadTitle && (
+                <span
+                  className="hidden sm:inline-flex items-center text-xs px-2 py-0.5 rounded"
+                  style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    color: '#c4a35a99',
+                    background: 'rgba(196, 163, 90, 0.08)',
+                    border: '1px solid rgba(196, 163, 90, 0.15)',
+                  }}
+                >
+                  {activeThreadTitle}
+                </span>
+              )}
+            </div>
+            <p
+              className="text-xs tracking-[0.3em] mt-0.5 uppercase"
+              style={{ fontFamily: "'JetBrains Mono', monospace", color: '#7a7580' }}
+            >
+              Four Voices &middot; One Space
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">

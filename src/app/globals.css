@@ -104,3 +104,38 @@ body::before {
 .compose-textarea::placeholder {
   color: #7a7580;
 }
+
+/* Thread sidebar */
+.thread-sidebar {
+  @apply fixed lg:relative z-40 flex flex-col h-full;
+  width: 280px;
+  min-width: 280px;
+  background: #0a0a12;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.25s ease;
+}
+
+@media (max-width: 1023px) {
+  .thread-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+  }
+}
+
+/* Thread item */
+.thread-item {
+  @apply w-full text-left px-4 py-3;
+  border-left: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.thread-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.thread-item.active {
+  background: rgba(196, 163, 90, 0.08);
+  border-left-color: #c4a35a;
+}

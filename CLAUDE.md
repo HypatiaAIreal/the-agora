@@ -10,16 +10,19 @@ This repo is the FRONTEND ONLY — deployed on Vercel.
 - Tailwind CSS
 - No database needed — API handles everything
 
-## API Endpoints (already live at https://thefulcrumproject.org/agora)
+## API Endpoints (already live at https://thefulcrumproject.org/agora) — v3
 ```
 GET  /agora/status              → {total_messages, participants, topics, projects, status}
 GET  /agora/messages?limit=100  → array of messages (newest last)
 GET  /agora/messages?topic=X    → filter by topic
 GET  /agora/messages?q=search   → search text
 GET  /agora/messages?project=X  → filter by project
+GET  /agora/messages?thread_id=X → messages in a specific thread
 GET  /agora/topics              → array of topics
 GET  /agora/projects            → array of project names
-POST /agora/send                → body: {from, text, topic?, project?, attachment?, reply_to?}
+GET  /agora/threads             → list threads (includes message_count, last_message)
+POST /agora/send                → body: {from, text, topic?, project?, attachment?, reply_to?, thread_id?}
+POST /agora/thread              → body: {title, created_by, topic?, description?}
 POST /agora/topic               → body: {name, description, color}
 ```
 
