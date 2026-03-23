@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 const API_BASE = 'https://thefulcrumproject.org/agora';
 
 export async function GET(request) {
