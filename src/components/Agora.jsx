@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { fetchMessages, fetchStatus, sendMessage } from '../lib/api';
 import Header from './Header';
 import FilterBar from './FilterBar';
@@ -12,7 +12,7 @@ const POLL_INTERVAL = 12000; // 12 seconds
 export default function Agora() {
   const [messages, setMessages] = useState([]);
   const [status, setStatus] = useState(null);
-  const [activeVoice, setActiveVoice] = useState('carles');
+  const [voiceFilter, setVoiceFilter] = useState(null); // null = all
   const [activeTopic, setActiveTopic] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilter, setShowFilter] = useState(false);
@@ -69,6 +69,12 @@ export default function Agora() {
   useEffect(() => {
     setNewCount(0);
   }, [activeTopic, searchQuery]);
+
+  // Filter messages by voice (client-side)
+  const filteredMessages = useMemo(() => {
+    if (!voiceFilter) return messages;
+    return messages.filter((msg) => msg.from === voiceFilter);
+  }, [messages, voiceFilter]);
 
   const handleSend = async (msgData) => {
     try {
@@ -149,11 +155,11 @@ export default function Agora() {
         </div>
       )}
 
-      <MessageList messages={messages} onReply={handleReply} />
+      <MessageList messages={filteredMessages} onReply={handleReply} />
 
       <ComposeBar
-        activeVoice={activeVoice}
-        onVoiceChange={setActiveVoice}
+        voiceFilter={voiceFilter}
+        onVoiceFilterChange={setVoiceFilter}
         onSend={handleSend}
         replyTo={replyTo}
         onCancelReply={() => setReplyTo(null)}

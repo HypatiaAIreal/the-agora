@@ -1,24 +1,14 @@
 'use client';
 
 import { VOICES, TOPICS } from '../lib/constants';
+import ReactMarkdown from 'react-markdown';
 
 function formatTime(timestamp) {
   const date = new Date(timestamp);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const day = date.getDate();
   const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-  if (diffDays === 0) {
-    if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    return time;
-  }
-  if (diffDays === 1) return `yesterday ${time}`;
-  return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
+  return `${month} ${day}, ${time}`;
 }
 
 export default function Message({ message, isGrouped, onReply, replyMessage }) {
@@ -51,7 +41,7 @@ export default function Message({ message, isGrouped, onReply, replyMessage }) {
         {/* Content */}
         <div className="flex-1 min-w-0 py-1">
           {!isGrouped && (
-            <div className="flex items-baseline gap-2 mb-0.5">
+            <div className="flex items-baseline gap-2 mb-0.5 flex-wrap">
               <span
                 className="font-semibold text-sm"
                 style={{ fontFamily: "'Cormorant Garamond', serif", color: voice.color, fontSize: '1.05rem' }}
@@ -82,6 +72,19 @@ export default function Message({ message, isGrouped, onReply, replyMessage }) {
                   {topic.label}
                 </span>
               )}
+              {message.project && (
+                <span
+                  className="topic-pill ml-1"
+                  style={{
+                    background: 'rgba(196, 163, 90, 0.12)',
+                    color: '#c4a35a',
+                    border: '1px solid rgba(196, 163, 90, 0.25)',
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}
+                >
+                  📁 {message.project}
+                </span>
+              )}
             </div>
           )}
 
@@ -103,9 +106,9 @@ export default function Message({ message, isGrouped, onReply, replyMessage }) {
             </div>
           )}
 
-          {/* Message text */}
-          <p
-            className="text-sm leading-relaxed break-words"
+          {/* Message text with markdown */}
+          <div
+            className="text-sm leading-relaxed break-words agora-markdown"
             style={{
               fontFamily: "'DM Sans', sans-serif",
               color: '#d4d0cb',
@@ -113,8 +116,74 @@ export default function Message({ message, isGrouped, onReply, replyMessage }) {
               paddingLeft: isGrouped ? '0.5rem' : 0,
             }}
           >
-            {message.text}
-          </p>
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                h1: ({ children }) => (
+                  <h1 className="text-xl font-bold mb-2 mt-3" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#c4a35a' }}>{children}</h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="text-lg font-bold mb-2 mt-3" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#c4a35a' }}>{children}</h2>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="text-base font-bold mb-1 mt-2" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#c4a35a' }}>{children}</h3>
+                ),
+                strong: ({ children }) => <strong className="font-bold" style={{ color: '#e8e4df' }}>{children}</strong>,
+                em: ({ children }) => <em className="italic" style={{ color: '#b0acaa' }}>{children}</em>,
+                code: ({ inline, className, children }) => {
+                  if (inline) {
+                    return (
+                      <code
+                        className="px-1.5 py-0.5 rounded text-xs"
+                        style={{
+                          background: 'rgba(255,255,255,0.08)',
+                          fontFamily: "'JetBrains Mono', monospace",
+                          color: '#c4a35a',
+                        }}
+                      >
+                        {children}
+                      </code>
+                    );
+                  }
+                  return (
+                    <code
+                      className="block p-3 rounded-lg my-2 text-xs overflow-x-auto"
+                      style={{
+                        background: 'rgba(0,0,0,0.3)',
+                        fontFamily: "'JetBrains Mono', monospace",
+                        color: '#d4d0cb',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                      }}
+                    >
+                      {children}
+                    </code>
+                  );
+                },
+                pre: ({ children }) => <pre className="my-2">{children}</pre>,
+                ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
+                li: ({ children }) => <li>{children}</li>,
+                hr: () => (
+                  <hr className="my-3 border-0 h-px" style={{ background: 'rgba(196, 163, 90, 0.2)' }} />
+                ),
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#c4a35a' }}>
+                    {children}
+                  </a>
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote
+                    className="pl-3 my-2 italic"
+                    style={{ borderLeft: '2px solid rgba(196, 163, 90, 0.4)', color: '#7a7580' }}
+                  >
+                    {children}
+                  </blockquote>
+                ),
+              }}
+            >
+              {message.text}
+            </ReactMarkdown>
+          </div>
 
           {/* Attachment */}
           {message.attachment && (

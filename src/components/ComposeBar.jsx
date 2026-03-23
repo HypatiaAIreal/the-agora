@@ -4,23 +4,26 @@ import { useState, useRef, useEffect } from 'react';
 import { VOICES, TOPICS, TOPIC_KEYS } from '../lib/constants';
 import VoiceSelector from './VoiceSelector';
 
-export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo, onCancelReply }) {
+export default function ComposeBar({ voiceFilter, onVoiceFilterChange, onSend, replyTo, onCancelReply }) {
   const [text, setText] = useState('');
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [project, setProject] = useState('');
   const [showProjectInput, setShowProjectInput] = useState(false);
   const textareaRef = useRef(null);
 
+  // Always send as Carles
+  const senderVoice = VOICES.carles;
+
   useEffect(() => {
     textareaRef.current?.focus();
-  }, [activeVoice, replyTo]);
+  }, [replyTo]);
 
   const handleSend = () => {
     const trimmed = text.trim();
     if (!trimmed) return;
 
     onSend({
-      from: activeVoice,
+      from: 'carles',
       text: trimmed,
       topic: selectedTopic,
       project: project.trim() || null,
@@ -41,16 +44,14 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
     }
   };
 
-  const voice = VOICES[activeVoice];
-
   return (
     <div
       className="relative z-10 border-t border-white/5"
       style={{ background: 'rgba(13, 13, 20, 0.95)', backdropFilter: 'blur(10px)' }}
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 space-y-3">
-        {/* Voice selector */}
-        <VoiceSelector activeVoice={activeVoice} onSelect={onVoiceChange} />
+        {/* Voice filter buttons */}
+        <VoiceSelector activeFilter={voiceFilter} onSelect={onVoiceFilterChange} />
 
         {/* Reply preview */}
         {replyTo && (
@@ -81,7 +82,7 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
           className="rounded-xl p-3"
           style={{
             background: 'rgba(255,255,255,0.03)',
-            border: `1px solid ${voice.color}22`,
+            border: `1px solid ${senderVoice.color}22`,
           }}
         >
           <textarea
@@ -89,7 +90,7 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={`Speak as ${voice.name}...`}
+            placeholder="Speak as Carles..."
             rows={2}
             className="compose-textarea"
           />
@@ -146,7 +147,7 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
               disabled={!text.trim()}
               className="px-4 py-1.5 rounded-lg text-sm font-medium transition-all"
               style={{
-                background: text.trim() ? `${voice.color}` : 'rgba(255,255,255,0.05)',
+                background: text.trim() ? senderVoice.color : 'rgba(255,255,255,0.05)',
                 color: text.trim() ? '#08080d' : '#7a7580',
                 opacity: text.trim() ? 1 : 0.5,
                 fontFamily: "'DM Sans', sans-serif",

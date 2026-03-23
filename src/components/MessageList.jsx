@@ -3,6 +3,26 @@
 import { useRef, useEffect } from 'react';
 import Message from './Message';
 
+function formatDateSeparator(timestamp) {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round((today - msgDate) / 86400000);
+
+  const options = { weekday: 'long', month: 'long', day: 'numeric' };
+  const formatted = date.toLocaleDateString('en-US', options);
+
+  if (diffDays === 0) return `Today — ${formatted}`;
+  if (diffDays === 1) return `Yesterday — ${formatted}`;
+  return formatted;
+}
+
+function getDateKey(timestamp) {
+  const d = new Date(timestamp);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
 export default function MessageList({ messages, onReply }) {
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
@@ -40,14 +60,35 @@ export default function MessageList({ messages, onReply }) {
         const isGrouped = prev && prev.from === msg.from && !msg.reply_to;
         const replyMessage = msg.reply_to ? messagesByTimestamp[msg.reply_to] : null;
 
+        // Date separator: show when date changes between messages
+        const showDateSeparator = !prev || getDateKey(msg.timestamp) !== getDateKey(prev.timestamp);
+
         return (
-          <Message
-            key={msg.timestamp + i}
-            message={msg}
-            isGrouped={isGrouped}
-            onReply={onReply}
-            replyMessage={replyMessage}
-          />
+          <div key={msg.timestamp + i}>
+            {showDateSeparator && (
+              <div className="flex items-center gap-4 px-4 sm:px-6 py-3 my-2">
+                <div className="flex-1 h-px" style={{ background: 'rgba(196, 163, 90, 0.15)' }} />
+                <span
+                  className="text-xs whitespace-nowrap"
+                  style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    color: '#c4a35a',
+                    fontSize: '0.65rem',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  {formatDateSeparator(msg.timestamp)}
+                </span>
+                <div className="flex-1 h-px" style={{ background: 'rgba(196, 163, 90, 0.15)' }} />
+              </div>
+            )}
+            <Message
+              message={msg}
+              isGrouped={isGrouped && !showDateSeparator}
+              onReply={onReply}
+              replyMessage={replyMessage}
+            />
+          </div>
         );
       })}
 
