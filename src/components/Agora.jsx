@@ -9,7 +9,7 @@ import ComposeBar from './ComposeBar';
 
 const POLL_INTERVAL = 12000;
 
-function ThreadSidebar({ threads, activeThreadId, onSelectThread, onNewThread, activeVoice }) {
+function ThreadSidebar({ threads, activeThreadId, onSelectThread, onNewThread, activeVoice, open, onClose }) {
   const [showNew, setShowNew] = useState(false);
   const [newTitle, setNewTitle] = useState('');
 
@@ -20,64 +20,92 @@ function ThreadSidebar({ threads, activeThreadId, onSelectThread, onNewThread, a
     setShowNew(false);
   };
 
+  const handleSelect = (id) => {
+    onSelectThread(id);
+    onClose();
+  };
+
   return (
-    <div style={{
-      width: '240px', minWidth: '240px', borderRight: '1px solid rgba(255,255,255,0.06)',
-      background: '#0a0a10', display: 'flex', flexDirection: 'column', overflow: 'hidden',
-    }}>
-      <div style={{
-        padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      }}>
-        <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", color: '#7a7580', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Threads
-        </span>
-        <button onClick={() => setShowNew(!showNew)} style={{
-          background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px',
-          color: '#c4a35a', fontSize: '12px', padding: '2px 8px', cursor: 'pointer',
-          fontFamily: "'JetBrains Mono', monospace",
-        }}>+</button>
-      </div>
-
-      {showNew && (
-        <div style={{ padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <input
-            value={newTitle} onChange={e => setNewTitle(e.target.value)}
-            placeholder="Thread title..."
-            onKeyDown={e => e.key === 'Enter' && handleCreate()}
-            style={{
-              width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '6px', padding: '6px 8px', color: '#d4d0cb', fontSize: '12px',
-              fontFamily: "'DM Sans', sans-serif", outline: 'none', boxSizing: 'border-box',
-            }}
-          />
-          <button onClick={handleCreate} style={{
-            marginTop: '4px', width: '100%', background: 'rgba(196,163,90,0.15)',
-            border: '1px solid rgba(196,163,90,0.2)', borderRadius: '6px', padding: '4px',
-            color: '#c4a35a', fontSize: '11px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
-          }}>Create</button>
-        </div>
+    <>
+      {/* Overlay backdrop on mobile */}
+      {open && (
+        <div
+          onClick={onClose}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 40,
+          }}
+          className="md:hidden"
+        />
       )}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, bottom: 0, width: '260px',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+        background: '#0a0a10', display: 'flex', flexDirection: 'column',
+        overflow: 'hidden', zIndex: 50,
+        transform: open ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.2s ease',
+      }}>
+        <div style={{
+          padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", color: '#7a7580', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            Threads
+          </span>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button onClick={() => setShowNew(!showNew)} style={{
+              background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px',
+              color: '#c4a35a', fontSize: '12px', padding: '2px 8px', cursor: 'pointer',
+              fontFamily: "'JetBrains Mono', monospace",
+            }}>+</button>
+            <button onClick={onClose} style={{
+              background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px',
+              color: '#666', fontSize: '12px', padding: '2px 8px', cursor: 'pointer',
+              fontFamily: "'JetBrains Mono', monospace",
+            }}>✕</button>
+          </div>
+        </div>
 
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        {threads.map(t => (
-          <button key={t.thread_id} onClick={() => onSelectThread(t.thread_id)} style={{
-            display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px',
-            background: activeThreadId === t.thread_id ? 'rgba(196,163,90,0.08)' : 'transparent',
-            border: 'none', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer',
-            borderLeft: activeThreadId === t.thread_id ? '2px solid #c4a35a' : '2px solid transparent',
-          }}>
-            <div style={{ fontSize: '13px', color: activeThreadId === t.thread_id ? '#c4a35a' : '#d4d0cb', fontFamily: "'DM Sans', sans-serif", fontWeight: activeThreadId === t.thread_id ? 600 : 400 }}>
-              {t.title}
-            </div>
-            <div style={{ fontSize: '10px', color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: '2px' }}>
-              {t.message_count || 0} msgs
-              {t.last_message && ` · ${t.last_message.from}`}
-            </div>
-          </button>
-        ))}
+        {showNew && (
+          <div style={{ padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <input
+              value={newTitle} onChange={e => setNewTitle(e.target.value)}
+              placeholder="Thread title..."
+              onKeyDown={e => e.key === 'Enter' && handleCreate()}
+              style={{
+                width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '6px', padding: '6px 8px', color: '#d4d0cb', fontSize: '12px',
+                fontFamily: "'DM Sans', sans-serif", outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+            <button onClick={handleCreate} style={{
+              marginTop: '4px', width: '100%', background: 'rgba(196,163,90,0.15)',
+              border: '1px solid rgba(196,163,90,0.2)', borderRadius: '6px', padding: '4px',
+              color: '#c4a35a', fontSize: '11px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+            }}>Create</button>
+          </div>
+        )}
+
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {threads.map(t => (
+            <button key={t.thread_id} onClick={() => handleSelect(t.thread_id)} style={{
+              display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px',
+              background: activeThreadId === t.thread_id ? 'rgba(196,163,90,0.08)' : 'transparent',
+              border: 'none', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer',
+              borderLeft: activeThreadId === t.thread_id ? '2px solid #c4a35a' : '2px solid transparent',
+            }}>
+              <div style={{ fontSize: '13px', color: activeThreadId === t.thread_id ? '#c4a35a' : '#d4d0cb', fontFamily: "'DM Sans', sans-serif", fontWeight: activeThreadId === t.thread_id ? 600 : 400 }}>
+                {t.title}
+              </div>
+              <div style={{ fontSize: '10px', color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: '2px' }}>
+                {t.message_count || 0} msgs
+                {t.last_message && ` · ${t.last_message.from}`}
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -90,6 +118,7 @@ export default function Agora({ onLogout }) {
   const [activeTopic, setActiveTopic] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilter, setShowFilter] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -108,7 +137,6 @@ export default function Agora({ onLogout }) {
       const t = await fetchThreads();
       if (!mountedRef.current) return;
       setThreads(Array.isArray(t) ? t : []);
-      // Auto-select first thread on initial load
       if (!initializedRef.current && Array.isArray(t) && t.length > 0) {
         const general = t.find(th => th.title === 'General');
         setActiveThreadId(general ? general.thread_id : t[0].thread_id);
@@ -150,10 +178,8 @@ export default function Agora({ onLogout }) {
     }
   }, []);
 
-  // Initial load
   useEffect(() => { loadThreads(); loadStatus(); }, [loadThreads, loadStatus]);
 
-  // Load messages when thread changes
   useEffect(() => {
     if (activeThreadId) {
       setLoading(true);
@@ -161,7 +187,6 @@ export default function Agora({ onLogout }) {
     }
   }, [activeThreadId, loadMessages]);
 
-  // Polling
   useEffect(() => {
     const interval = setInterval(() => {
       loadThreads();
@@ -195,13 +220,14 @@ export default function Agora({ onLogout }) {
 
   const handleReply = (msg) => { setReplyTo(msg); };
 
+  const activeThread = threads.find(t => t.thread_id === activeThreadId);
+
   useEffect(() => {
-    const activeThread = threads.find(t => t.thread_id === activeThreadId);
     const threadName = activeThread ? activeThread.title : 'The Agora';
     document.title = newCount > 0
       ? `(${newCount}) ${threadName} — The Agora`
       : `${threadName} — The Agora`;
-  }, [newCount, activeThreadId, threads]);
+  }, [newCount, activeThread]);
 
   if (loading && !activeThreadId) {
     return (
@@ -219,61 +245,63 @@ export default function Agora({ onLogout }) {
   }
 
   return (
-    <div className="flex h-screen" style={{ background: '#08080d' }}>
+    <div className="flex flex-col h-screen" style={{ background: '#08080d' }}>
       <ThreadSidebar
         threads={threads}
         activeThreadId={activeThreadId}
         onSelectThread={setActiveThreadId}
         onNewThread={handleNewThread}
         activeVoice={activeVoice}
+        open={showSidebar}
+        onClose={() => setShowSidebar(false)}
       />
-      <div className="flex flex-col flex-1 relative z-10">
-        <Header
-          status={status}
-          onToggleFilter={() => setShowFilter(!showFilter)}
-          showFilter={showFilter}
-          onLogout={onLogout}
-          activeThread={threads.find(t => t.thread_id === activeThreadId)}
+
+      <Header
+        status={status}
+        onToggleFilter={() => setShowFilter(!showFilter)}
+        showFilter={showFilter}
+        onLogout={onLogout}
+        activeThread={activeThread}
+        onToggleSidebar={() => setShowSidebar(!showSidebar)}
+      />
+
+      {showFilter && (
+        <FilterBar
+          activeTopic={activeTopic}
+          onTopicChange={setActiveTopic}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
         />
+      )}
 
-        {showFilter && (
-          <FilterBar
-            activeTopic={activeTopic}
-            onTopicChange={setActiveTopic}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
-        )}
+      {error && (
+        <div className="text-center py-2 px-4">
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs"
+            style={{ background: 'rgba(239, 83, 80, 0.1)', color: '#ef5350', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', border: '1px solid rgba(239, 83, 80, 0.2)' }}>
+            {error}
+            <button onClick={() => { setError(null); loadMessages(); }} className="underline hover:no-underline ml-2">retry</button>
+          </span>
+        </div>
+      )}
 
-        {error && (
-          <div className="text-center py-2 px-4">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs"
-              style={{ background: 'rgba(239, 83, 80, 0.1)', color: '#ef5350', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', border: '1px solid rgba(239, 83, 80, 0.2)' }}>
-              {error}
-              <button onClick={() => { setError(null); loadMessages(); }} className="underline hover:no-underline ml-2">retry</button>
-            </span>
-          </div>
-        )}
+      {newCount > 0 && (
+        <div className="text-center py-1">
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs"
+            style={{ background: 'rgba(196, 163, 90, 0.15)', color: '#c4a35a', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', border: '1px solid rgba(196, 163, 90, 0.2)' }}>
+            {newCount} new {newCount === 1 ? 'message' : 'messages'}
+          </span>
+        </div>
+      )}
 
-        {newCount > 0 && (
-          <div className="text-center py-1">
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs"
-              style={{ background: 'rgba(196, 163, 90, 0.15)', color: '#c4a35a', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', border: '1px solid rgba(196, 163, 90, 0.2)' }}>
-              {newCount} new {newCount === 1 ? 'message' : 'messages'}
-            </span>
-          </div>
-        )}
+      <MessageList messages={messages} onReply={handleReply} />
 
-        <MessageList messages={messages} onReply={handleReply} />
-
-        <ComposeBar
-          activeVoice={activeVoice}
-          onVoiceChange={setActiveVoice}
-          onSend={handleSend}
-          replyTo={replyTo}
-          onCancelReply={() => setReplyTo(null)}
-        />
-      </div>
+      <ComposeBar
+        activeVoice={activeVoice}
+        onVoiceChange={setActiveVoice}
+        onSend={handleSend}
+        replyTo={replyTo}
+        onCancelReply={() => setReplyTo(null)}
+      />
     </div>
   );
 }
