@@ -9,10 +9,11 @@ export async function GET(request) {
   }
   const res = await fetch(`${API_BASE}/threads?${params.toString()}`, {
     headers: { 'Accept': 'application/json' },
+    cache: 'no-store',
   });
   const data = await res.text();
   return new Response(data, {
     status: res.status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store' },
   });
 }
