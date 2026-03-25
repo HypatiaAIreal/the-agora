@@ -139,3 +139,52 @@ body::before {
   background: rgba(196, 163, 90, 0.08);
   border-left-color: #c4a35a;
 }
+
+/* Message action buttons */
+.msg-actions {
+  opacity: 0.3;
+  transition: opacity 0.15s ease;
+}
+
+.group:hover .msg-actions {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .msg-actions {
+    opacity: 0.5;
+  }
+}
+
+.msg-action-btn {
+  @apply inline-flex items-center justify-center rounded transition-all;
+  width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+  color: #7a7580;
+  background: transparent;
+  cursor: pointer;
+  border: none;
+}
+
+.msg-action-btn:hover {
+  color: #c4a35a;
+  background: rgba(196, 163, 90, 0.1);
+}
+
+.msg-toast {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: #c4a35a;
+  background: rgba(196, 163, 90, 0.15);
+  border: 1px solid rgba(196, 163, 90, 0.2);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fadeInUp 0.2s ease-out;
+}

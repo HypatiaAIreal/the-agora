@@ -1,13 +1,15 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { VOICES, TOPICS } from '../lib/constants';
+import { translateText } from '../lib/api';
+import BookmarkPopover from './BookmarkPopover';
 
 function formatTime(timestamp) {
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now - date;
   const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
   const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -21,13 +23,60 @@ function formatTime(timestamp) {
   return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
 }
 
-export default function Message({ message, isGrouped, onReply, replyMessage }) {
+export default function Message({ message, isGrouped, onReply, replyMessage, bookmarkedTimestamps, onBookmarkChange }) {
   const voice = VOICES[message.from] || VOICES.carles;
   const topic = message.topic ? TOPICS[message.topic] : null;
 
+  const [copied, setCopied] = useState(false);
+  const [showBookmark, setShowBookmark] = useState(false);
+  const [translation, setTranslation] = useState(null);
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [translating, setTranslating] = useState(false);
+  const copyTimeoutRef = useRef(null);
+
+  const isBookmarked = bookmarkedTimestamps?.has(message.timestamp);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.text);
+      setCopied(true);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // fallback
+    }
+  };
+
+  const handleTranslate = async () => {
+    if (showTranslation) {
+      setShowTranslation(false);
+      return;
+    }
+    if (translation) {
+      setShowTranslation(true);
+      return;
+    }
+    setTranslating(true);
+    try {
+      const result = await translateText(message.text, 'es');
+      setTranslation(result);
+      setShowTranslation(true);
+    } catch {
+      // silent fail
+    } finally {
+      setTranslating(false);
+    }
+  };
+
   return (
     <div
-      className="message-enter px-4 sm:px-6 py-1"
+      className="message-enter px-4 sm:px-6 py-1 group relative"
       style={{
         background: `linear-gradient(90deg, ${voice.color}0D 0%, transparent 40%)`,
       }}
@@ -116,6 +165,24 @@ export default function Message({ message, isGrouped, onReply, replyMessage }) {
             {message.text}
           </p>
 
+          {/* Translation */}
+          {showTranslation && translation && (
+            <div
+              className="mt-2 pl-3 py-2 rounded text-sm"
+              style={{
+                borderLeft: '2px solid #c4a35a44',
+                background: 'rgba(196, 163, 90, 0.04)',
+                fontFamily: "'DM Sans', sans-serif",
+                color: '#d4d0cb',
+              }}
+            >
+              <p className="mb-1" style={{ fontSize: '0.65rem', color: '#7a7580', fontFamily: "'JetBrains Mono', monospace" }}>
+                Translated to Spanish {translation.cached ? '(cached)' : ''}
+              </p>
+              {translation.translated_text}
+            </div>
+          )}
+
           {/* Attachment */}
           {message.attachment && (
             <div className="mt-2">
@@ -139,16 +206,53 @@ export default function Message({ message, isGrouped, onReply, replyMessage }) {
             </div>
           )}
 
-          {/* Reply button */}
-          <button
-            onClick={() => onReply(message)}
-            className="mt-1 text-xs opacity-0 hover:opacity-100 transition-opacity group-hover:opacity-50"
-            style={{ color: '#7a7580', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem' }}
-            onMouseEnter={(e) => (e.target.style.opacity = 1)}
-            onMouseLeave={(e) => (e.target.style.opacity = 0)}
-          >
-            ↩ reply
-          </button>
+          {/* Action bar */}
+          <div className="flex items-center gap-1 mt-1 msg-actions">
+            <button
+              onClick={() => onReply(message)}
+              className="msg-action-btn"
+              title="Reply"
+            >
+              ↩
+            </button>
+            <button
+              onClick={handleCopy}
+              className="msg-action-btn relative"
+              title="Copy"
+            >
+              {copied ? '✓' : '📋'}
+              {copied && (
+                <span className="msg-toast">Copied!</span>
+              )}
+            </button>
+            <button
+              onClick={() => setShowBookmark(!showBookmark)}
+              className="msg-action-btn"
+              title={isBookmarked ? 'Edit bookmark' : 'Bookmark'}
+              style={isBookmarked ? { color: '#c4a35a', opacity: 1 } : {}}
+            >
+              {isBookmarked ? '★' : '☆'}
+            </button>
+            <button
+              onClick={handleTranslate}
+              className="msg-action-btn"
+              title={showTranslation ? 'Hide translation' : 'Translate to Spanish'}
+              style={showTranslation ? { color: '#c4a35a', opacity: 1 } : {}}
+              disabled={translating}
+            >
+              {translating ? '…' : '🌐'}
+            </button>
+          </div>
+
+          {/* Bookmark popover */}
+          {showBookmark && (
+            <BookmarkPopover
+              message={message}
+              isBookmarked={isBookmarked}
+              onClose={() => setShowBookmark(false)}
+              onBookmarkChange={onBookmarkChange}
+            />
+          )}
         </div>
       </div>
     </div>

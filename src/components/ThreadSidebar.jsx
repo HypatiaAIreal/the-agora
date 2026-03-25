@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { VOICES, TOPICS } from '../lib/constants';
 
 function formatTimeAgo(timestamp) {
@@ -148,6 +149,23 @@ export default function ThreadSidebar({
               </button>
             );
           })}
+        </div>
+
+        {/* Bookmarks link */}
+        <div className="px-4 py-3 border-t border-white/5">
+          <Link
+            href="/bookmarks"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              color: '#7a7580',
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            <span style={{ fontSize: '0.85rem' }}>★</span>
+            Bookmarks
+          </Link>
         </div>
       </aside>
     </>

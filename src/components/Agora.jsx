@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchMessages, fetchStatus, fetchThreads, createThread, sendMessage } from '../lib/api';
+import { fetchMessages, fetchStatus, fetchThreads, fetchBookmarks, createThread, sendMessage } from '../lib/api';
 import Header from './Header';
 import FilterBar from './FilterBar';
 import MessageList from './MessageList';
@@ -15,7 +15,7 @@ export default function Agora() {
   const [messages, setMessages] = useState([]);
   const [status, setStatus] = useState(null);
   const [threads, setThreads] = useState([]);
-  const [activeThreadId, setActiveThreadId] = useState(null); // null = General
+  const [activeThreadId, setActiveThreadId] = useState(null);
   const [activeVoice, setActiveVoice] = useState('carles');
   const [activeTopic, setActiveTopic] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,7 +25,20 @@ export default function Agora() {
   const [replyTo, setReplyTo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newCount, setNewCount] = useState(0);
+  const [bookmarkedTimestamps, setBookmarkedTimestamps] = useState(new Set());
   const lastSeenCountRef = useRef(0);
+
+  const loadBookmarks = useCallback(async () => {
+    try {
+      const data = await fetchBookmarks();
+      const timestamps = new Set(
+        (Array.isArray(data) ? data : []).map((b) => b.timestamp)
+      );
+      setBookmarkedTimestamps(timestamps);
+    } catch {
+      // silent
+    }
+  }, []);
 
   const loadMessages = useCallback(async () => {
     try {
@@ -70,7 +83,6 @@ export default function Agora() {
       // Auto-select first thread (General) if none selected yet
       setActiveThreadId((prev) => {
         if (prev) return prev;
-        // Prefer the "General" thread, otherwise first thread
         const general = t.find((th) => th.title === 'General');
         return general?.id || t[0]?.id || null;
       });
@@ -84,7 +96,8 @@ export default function Agora() {
     loadMessages();
     loadStatus();
     loadThreads();
-  }, [loadMessages, loadStatus, loadThreads]);
+    loadBookmarks();
+  }, [loadMessages, loadStatus, loadThreads, loadBookmarks]);
 
   // Polling
   useEffect(() => {
@@ -109,7 +122,6 @@ export default function Agora() {
         thread_id: activeThreadId,
       });
       setReplyTo(null);
-      // Immediate refresh
       await loadMessages();
       await loadStatus();
       await loadThreads();
@@ -126,7 +138,6 @@ export default function Agora() {
     try {
       const result = await createThread(threadData);
       await loadThreads();
-      // Switch to the new thread
       if (result.thread_id) {
         setActiveThreadId(result.thread_id);
       }
@@ -219,7 +230,12 @@ export default function Agora() {
           </div>
         )}
 
-        <MessageList messages={messages} onReply={handleReply} />
+        <MessageList
+          messages={messages}
+          onReply={handleReply}
+          bookmarkedTimestamps={bookmarkedTimestamps}
+          onBookmarkChange={loadBookmarks}
+        />
 
         <ComposeBar
           activeVoice={activeVoice}

@@ -1,19 +1,31 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { VOICES, TOPICS, TOPIC_KEYS } from '../lib/constants';
+import { VOICES } from '../lib/constants';
+import { fetchTags, createTag } from '../lib/api';
 import VoiceSelector from './VoiceSelector';
 
 export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo, onCancelReply }) {
   const [text, setText] = useState('');
   const [selectedTopic, setSelectedTopic] = useState(null);
-  const [project, setProject] = useState('');
+  const [selectedProject, setSelectedProject] = useState('');
   const [showProjectInput, setShowProjectInput] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [tags, setTags] = useState([]);
   const textareaRef = useRef(null);
 
   useEffect(() => {
     textareaRef.current?.focus();
   }, [activeVoice, replyTo]);
+
+  useEffect(() => {
+    fetchTags()
+      .then((t) => setTags(Array.isArray(t) ? t : []))
+      .catch(() => setTags([]));
+  }, []);
+
+  const topicTags = tags.filter((t) => t.type === 'topic');
+  const projectTags = tags.filter((t) => t.type === 'project');
 
   const handleSend = () => {
     const trimmed = text.trim();
@@ -23,14 +35,15 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
       from: activeVoice,
       text: trimmed,
       topic: selectedTopic,
-      project: project.trim() || null,
+      project: selectedProject || null,
       reply_to: replyTo?.timestamp || null,
     });
 
     setText('');
     setSelectedTopic(null);
-    setProject('');
+    setSelectedProject('');
     setShowProjectInput(false);
+    setNewProjectName('');
     textareaRef.current?.focus();
   };
 
@@ -38,6 +51,21 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleCreateProject = async () => {
+    const trimmed = newProjectName.trim();
+    if (!trimmed) return;
+    try {
+      await createTag({ name: trimmed, type: 'project', color: '#7a7580' });
+      const updated = await fetchTags();
+      setTags(Array.isArray(updated) ? updated : []);
+      setSelectedProject(trimmed);
+      setNewProjectName('');
+      setShowProjectInput(false);
+    } catch {
+      // silent
     }
   };
 
@@ -97,37 +125,61 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
           {/* Bottom bar: tags + send */}
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
             <div className="flex items-center gap-1.5 flex-wrap">
-              {/* Topic tags */}
-              {TOPIC_KEYS.map((key) => {
-                const topic = TOPICS[key];
-                const isActive = selectedTopic === key;
+              {/* Topic tags from API */}
+              {topicTags.map((tag) => {
+                const isActive = selectedTopic === tag.name;
                 return (
                   <button
-                    key={key}
-                    onClick={() => setSelectedTopic(isActive ? null : key)}
+                    key={tag.name}
+                    onClick={() => setSelectedTopic(isActive ? null : tag.name)}
                     className="topic-pill transition-colors"
                     style={{
-                      background: isActive ? `${topic.color}22` : 'rgba(255,255,255,0.04)',
-                      color: isActive ? topic.color : '#7a758088',
-                      border: isActive ? `1px solid ${topic.color}44` : '1px solid transparent',
+                      background: isActive ? `${tag.color || '#7a7580'}22` : 'rgba(255,255,255,0.04)',
+                      color: isActive ? (tag.color || '#c4a35a') : '#7a758088',
+                      border: isActive ? `1px solid ${tag.color || '#7a7580'}44` : '1px solid transparent',
                     }}
                   >
-                    {topic.label}
+                    {tag.name}
                   </button>
                 );
               })}
 
-              {/* Project tag */}
+              {/* Divider */}
+              {projectTags.length > 0 && (
+                <span style={{ color: '#7a758033', fontSize: '0.7rem' }}>|</span>
+              )}
+
+              {/* Project tags from API */}
+              {projectTags.map((p) => {
+                const isActive = selectedProject === p.name;
+                return (
+                  <button
+                    key={p.name}
+                    onClick={() => setSelectedProject(isActive ? '' : p.name)}
+                    className="topic-pill transition-colors"
+                    style={{
+                      background: isActive ? `${p.color || '#26a69a'}22` : 'rgba(255,255,255,0.04)',
+                      color: isActive ? (p.color || '#26a69a') : '#7a758088',
+                      border: isActive ? `1px solid ${p.color || '#26a69a'}44` : '1px solid transparent',
+                    }}
+                  >
+                    📁 {p.name}
+                  </button>
+                );
+              })}
+
+              {/* Add project */}
               {showProjectInput ? (
                 <input
                   type="text"
-                  value={project}
-                  onChange={(e) => setProject(e.target.value)}
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
                   placeholder="project name"
                   className="bg-transparent border border-white/10 rounded px-2 py-0.5 text-xs outline-none"
                   style={{ color: '#d4d0cb', fontFamily: "'JetBrains Mono', monospace", width: '120px' }}
                   autoFocus
-                  onBlur={() => { if (!project) setShowProjectInput(false); }}
+                  onBlur={() => { if (!newProjectName) setShowProjectInput(false); }}
                 />
               ) : (
                 <button

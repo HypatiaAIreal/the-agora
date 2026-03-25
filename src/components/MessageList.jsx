@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react';
 import Message from './Message';
 
-export default function MessageList({ messages, onReply }) {
+export default function MessageList({ messages, onReply, bookmarkedTimestamps, onBookmarkChange }) {
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
   const prevCountRef = useRef(0);
@@ -47,6 +47,8 @@ export default function MessageList({ messages, onReply }) {
             isGrouped={isGrouped}
             onReply={onReply}
             replyMessage={replyMessage}
+            bookmarkedTimestamps={bookmarkedTimestamps}
+            onBookmarkChange={onBookmarkChange}
           />
         );
       })}
