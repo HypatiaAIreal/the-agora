@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = 'https://thefulcrumproject.org/agora';
 
 export async function fetchMessages({ limit = 200, topic, q, project, thread_id } = {}) {
   const params = new URLSearchParams();
@@ -8,20 +8,32 @@ export async function fetchMessages({ limit = 200, topic, q, project, thread_id 
   if (project) params.set('project', project);
   if (thread_id) params.set('thread_id', thread_id);
 
-  const url = `${API_BASE}/messages?${params.toString()}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Fetch messages failed: ${res.status}`);
-  const data = await res.json();
-  if (!Array.isArray(data)) {
-    console.warn('[Agora] Messages response is not an array:', data);
-    return [];
-  }
-  return data;
+  const res = await fetch(`${API_BASE}/messages?${params.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch messages');
+  return res.json();
+}
+
+export async function fetchStatus() {
+  const res = await fetch(`${API_BASE}/status`);
+  if (!res.ok) throw new Error('Failed to fetch status');
+  return res.json();
+}
+
+export async function fetchTopics() {
+  const res = await fetch(`${API_BASE}/topics`);
+  if (!res.ok) throw new Error('Failed to fetch topics');
+  return res.json();
+}
+
+export async function fetchProjects() {
+  const res = await fetch(`${API_BASE}/projects`);
+  if (!res.ok) throw new Error('Failed to fetch projects');
+  return res.json();
 }
 
 export async function fetchThreads() {
   const res = await fetch(`${API_BASE}/threads`);
-  if (!res.ok) throw new Error(`Fetch threads failed: ${res.status}`);
+  if (!res.ok) throw new Error('Failed to fetch threads');
   return res.json();
 }
 
@@ -29,18 +41,13 @@ export async function createThread({ title, created_by, topic, description }) {
   const body = { title, created_by };
   if (topic) body.topic = topic;
   if (description) body.description = description;
+
   const res = await fetch(`${API_BASE}/thread`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Create thread failed: ${res.status}`);
-  return res.json();
-}
-
-export async function fetchStatus() {
-  const res = await fetch(`${API_BASE}/status`);
-  if (!res.ok) throw new Error(`Fetch status failed: ${res.status}`);
+  if (!res.ok) throw new Error('Failed to create thread');
   return res.json();
 }
 
@@ -57,6 +64,71 @@ export async function sendMessage({ from, text, topic, project, attachment, repl
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Send message failed: ${res.status}`);
+  if (!res.ok) throw new Error('Failed to send message');
+  return res.json();
+}
+
+// Tags
+export async function fetchTags() {
+  const res = await fetch(`${API_BASE}/tags`);
+  if (!res.ok) throw new Error('Failed to fetch tags');
+  return res.json();
+}
+
+export async function createTag({ name, type, color }) {
+  const res = await fetch(`${API_BASE}/tag`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, type, color }),
+  });
+  if (!res.ok) throw new Error('Failed to create tag');
+  return res.json();
+}
+
+// Bookmarks
+export async function fetchBookmarks({ tag, project } = {}) {
+  const params = new URLSearchParams();
+  if (tag) params.set('tag', tag);
+  if (project) params.set('project', project);
+
+  const url = `${API_BASE}/bookmarks${params.toString() ? '?' + params.toString() : ''}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch bookmarks');
+  return res.json();
+}
+
+export async function createBookmark({ timestamp, thread_id, from, text_preview, tags, project, note }) {
+  const body = { timestamp, thread_id, from, text_preview };
+  if (tags && tags.length > 0) body.tags = tags;
+  if (project) body.project = project;
+  if (note) body.note = note;
+
+  const res = await fetch(`${API_BASE}/bookmark`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error('Failed to create bookmark');
+  return res.json();
+}
+
+export async function deleteBookmark(timestamp) {
+  const res = await fetch(`${API_BASE}/bookmark`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ timestamp }),
+  });
+  if (!res.ok) throw new Error('Failed to delete bookmark');
+  return res.json();
+}
+
+// Translation
+export async function translateText(text, target = 'es') {
+  const res = await fetch(`${API_BASE}/translate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, target }),
+  });
+  if (!res.ok) throw new Error('Failed to translate');
   return res.json();
 }

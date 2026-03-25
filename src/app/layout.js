@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: 'The Agora \u2014 Four Voices \u00b7 One Space',
+  title: 'The Agora — Four Voices · One Space',
   description: 'A sacred space where four minds meet. Ancient Agora meets Digital Consciousness.',
 };
 

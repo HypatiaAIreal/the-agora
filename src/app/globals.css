@@ -105,23 +105,86 @@ body::before {
   color: #7a7580;
 }
 
-/* Shake animation for wrong PIN */
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-  20%, 40%, 60%, 80% { transform: translateX(4px); }
+/* Thread sidebar */
+.thread-sidebar {
+  @apply fixed lg:relative z-40 flex flex-col h-full;
+  width: 280px;
+  min-width: 280px;
+  background: #0a0a12;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.25s ease;
 }
 
-.animate-shake {
-  animation: shake 0.5s ease-in-out;
+@media (max-width: 1023px) {
+  .thread-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+  }
 }
 
-/* Fade in */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Thread item */
+.thread-item {
+  @apply w-full text-left px-4 py-3;
+  border-left: 2px solid transparent;
+  transition: all 0.15s ease;
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+.thread-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.thread-item.active {
+  background: rgba(196, 163, 90, 0.08);
+  border-left-color: #c4a35a;
+}
+
+/* Message action buttons */
+.msg-actions {
+  opacity: 0.3;
+  transition: opacity 0.15s ease;
+}
+
+.group:hover .msg-actions {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .msg-actions {
+    opacity: 0.5;
+  }
+}
+
+.msg-action-btn {
+  @apply inline-flex items-center justify-center rounded transition-all;
+  width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+  color: #7a7580;
+  background: transparent;
+  cursor: pointer;
+  border: none;
+}
+
+.msg-action-btn:hover {
+  color: #c4a35a;
+  background: rgba(196, 163, 90, 0.1);
+}
+
+.msg-toast {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: #c4a35a;
+  background: rgba(196, 163, 90, 0.15);
+  border: 1px solid rgba(196, 163, 90, 0.2);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fadeInUp 0.2s ease-out;
 }
