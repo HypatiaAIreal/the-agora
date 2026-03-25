@@ -71,15 +71,15 @@ export default function ThreadSidebar({
         {/* Thread list */}
         <div className="flex-1 overflow-y-auto py-2">
           {allThreads.map((thread) => {
-            const isActive = thread.id === activeThreadId;
+            const isActive = thread.thread_id === activeThreadId;
             const creator = thread.created_by ? VOICES[thread.created_by] : null;
             const topicData = thread.topic ? TOPICS[thread.topic] : null;
 
             return (
               <button
-                key={thread.id}
+                key={thread.thread_id}
                 onClick={() => {
-                  onSelectThread(thread.id);
+                  onSelectThread(thread.thread_id);
                   onCloseSidebar();
                 }}
                 className={`thread-item ${isActive ? 'active' : ''}`}
