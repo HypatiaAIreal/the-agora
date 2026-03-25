@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { VOICES, TOPICS } from '../lib/constants';
 import { translateText } from '../lib/api';
 import BookmarkPopover from './BookmarkPopover';
@@ -153,8 +154,8 @@ export default function Message({ message, isGrouped, onReply, replyMessage, boo
           )}
 
           {/* Message text */}
-          <p
-            className="text-sm leading-relaxed break-words"
+          <div
+            className="prose prose-invert prose-sm max-w-none"
             style={{
               fontFamily: "'DM Sans', sans-serif",
               color: '#d4d0cb',
@@ -162,8 +163,8 @@ export default function Message({ message, isGrouped, onReply, replyMessage, boo
               paddingLeft: isGrouped ? '0.5rem' : 0,
             }}
           >
-            {message.text}
-          </p>
+            <ReactMarkdown>{message.text}</ReactMarkdown>
+          </div>
 
           {/* Translation */}
           {showTranslation && translation && (
