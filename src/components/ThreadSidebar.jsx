@@ -179,6 +179,19 @@ export default function ThreadSidebar({
             <span style={{ fontSize: '0.85rem' }}>📚</span>
             Library
           </Link>
+          <Link
+            href="/apps"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              color: '#7a7580',
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            <span style={{ fontSize: '0.85rem' }}>{'\uD83D\uDDFA\uFE0F'}</span>
+            Apps
+          </Link>
           <button
             onClick={() => {
               localStorage.removeItem('agora_auth');
