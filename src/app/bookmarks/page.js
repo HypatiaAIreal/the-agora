@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchBookmarks, fetchTags, deleteBookmark } from '../../lib/api';
 import { VOICES } from '../../lib/constants';
 import Link from 'next/link';
+import AuthGate from '../../components/AuthGate';
 
 function formatDate(timestamp) {
   const d = new Date(timestamp);
@@ -63,6 +64,7 @@ export default function BookmarksPage() {
   }
 
   return (
+    <AuthGate>
     <div className="min-h-screen" style={{ background: '#08080d' }}>
       {/* Header */}
       <header className="border-b border-white/5 px-4 sm:px-6 py-4">
@@ -243,5 +245,6 @@ export default function BookmarksPage() {
         ))}
       </div>
     </div>
+    </AuthGate>
   );
 }

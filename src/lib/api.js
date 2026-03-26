@@ -122,6 +122,35 @@ export async function deleteBookmark(timestamp) {
   return res.json();
 }
 
+// Library
+export async function fetchLibraryChapters() {
+  const res = await fetch(`${API_BASE}/library/chapters`);
+  if (!res.ok) throw new Error('Failed to fetch library chapters');
+  return res.json();
+}
+
+export async function fetchLibraryChapter(num) {
+  const res = await fetch(`${API_BASE}/library/chapter/${num}`);
+  if (!res.ok) throw new Error('Failed to fetch chapter');
+  return res.json();
+}
+
+export async function fetchLibraryCompare(num) {
+  const res = await fetch(`${API_BASE}/library/compare/${num}`);
+  if (!res.ok) throw new Error('Failed to fetch chapter comparison');
+  return res.json();
+}
+
+// Auth
+export async function verifyAuth(username, password) {
+  const res = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  return res.json();
+}
+
 // Translation
 export async function translateText(text, target = 'es') {
   const res = await fetch(`${API_BASE}/translate`, {

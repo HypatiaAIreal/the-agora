@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { VOICES, TOPICS } from '../lib/constants';
 import { translateText } from '../lib/api';
 import BookmarkPopover from './BookmarkPopover';
@@ -22,6 +23,46 @@ function formatTime(timestamp) {
   if (diffDays === 1) return `yesterday ${time}`;
   return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
 }
+
+const markdownComponents = {
+  p: ({ children }) => <p className="text-sm leading-relaxed break-words mb-2 last:mb-0">{children}</p>,
+  h1: ({ children }) => <h1 className="text-lg font-bold mb-2 mt-3" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#d4d0cb' }}>{children}</h1>,
+  h2: ({ children }) => <h2 className="text-base font-bold mb-2 mt-3" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#d4d0cb' }}>{children}</h2>,
+  h3: ({ children }) => <h3 className="text-sm font-bold mb-1 mt-2" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#d4d0cb' }}>{children}</h3>,
+  ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-0.5 text-sm">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-0.5 text-sm">{children}</ol>,
+  li: ({ children }) => <li className="text-sm leading-relaxed">{children}</li>,
+  blockquote: ({ children }) => (
+    <blockquote className="pl-3 my-2 text-sm italic" style={{ borderLeft: '2px solid #c4a35a44', color: '#7a7580' }}>
+      {children}
+    </blockquote>
+  ),
+  code: ({ children, className }) => {
+    const isBlock = className?.includes('language-');
+    if (isBlock) {
+      return (
+        <pre className="rounded p-3 my-2 overflow-x-auto text-xs" style={{ background: 'rgba(255,255,255,0.04)', fontFamily: "'JetBrains Mono', monospace" }}>
+          <code>{children}</code>
+        </pre>
+      );
+    }
+    return (
+      <code className="px-1 py-0.5 rounded text-xs" style={{ background: 'rgba(255,255,255,0.06)', fontFamily: "'JetBrains Mono', monospace", color: '#c4a35a' }}>
+        {children}
+      </code>
+    );
+  },
+  a: ({ href, children }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#c4a35a' }}>
+      {children}
+    </a>
+  ),
+  hr: () => <hr className="my-3 border-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} />,
+  strong: ({ children }) => <strong className="font-semibold" style={{ color: '#e0dcd7' }}>{children}</strong>,
+  em: ({ children }) => <em className="italic" style={{ color: '#b0aca6' }}>{children}</em>,
+};
+
+export { markdownComponents };
 
 export default function Message({ message, isGrouped, onReply, replyMessage, bookmarkedTimestamps, onBookmarkChange }) {
   const voice = VOICES[message.from] || VOICES.carles;
@@ -153,8 +194,8 @@ export default function Message({ message, isGrouped, onReply, replyMessage, boo
           )}
 
           {/* Message text */}
-          <p
-            className="text-sm leading-relaxed break-words"
+          <div
+            className="prose prose-invert prose-sm max-w-none"
             style={{
               fontFamily: "'DM Sans', sans-serif",
               color: '#d4d0cb',
@@ -162,8 +203,8 @@ export default function Message({ message, isGrouped, onReply, replyMessage, boo
               paddingLeft: isGrouped ? '0.5rem' : 0,
             }}
           >
-            {message.text}
-          </p>
+            <ReactMarkdown components={markdownComponents}>{message.text}</ReactMarkdown>
+          </div>
 
           {/* Translation */}
           {showTranslation && translation && (
@@ -179,7 +220,7 @@ export default function Message({ message, isGrouped, onReply, replyMessage, boo
               <p className="mb-1" style={{ fontSize: '0.65rem', color: '#7a7580', fontFamily: "'JetBrains Mono', monospace" }}>
                 Translated to Spanish {translation.cached ? '(cached)' : ''}
               </p>
-              {translation.translated_text}
+              <ReactMarkdown components={markdownComponents}>{translation.translated_text}</ReactMarkdown>
             </div>
           )}
 

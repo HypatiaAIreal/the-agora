@@ -84,7 +84,7 @@ export default function Agora() {
       setActiveThreadId((prev) => {
         if (prev) return prev;
         const general = t.find((th) => th.title === 'General');
-        return general?.id || t[0]?.id || null;
+        return general?.thread_id || t[0]?.thread_id || null;
       });
     } catch (err) {
       console.error('Failed to load threads:', err);
@@ -199,7 +199,7 @@ export default function Agora() {
           showFilter={showFilter}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           activeThreadTitle={
-            threads.find((t) => t.id === activeThreadId)?.title || null
+            threads.find((t) => t.thread_id === activeThreadId)?.title || null
           }
         />
 

@@ -71,15 +71,15 @@ export default function ThreadSidebar({
         {/* Thread list */}
         <div className="flex-1 overflow-y-auto py-2">
           {allThreads.map((thread) => {
-            const isActive = thread.id === activeThreadId;
+            const isActive = thread.thread_id === activeThreadId;
             const creator = thread.created_by ? VOICES[thread.created_by] : null;
             const topicData = thread.topic ? TOPICS[thread.topic] : null;
 
             return (
               <button
-                key={thread.id}
+                key={thread.thread_id}
                 onClick={() => {
-                  onSelectThread(thread.id);
+                  onSelectThread(thread.thread_id);
                   onCloseSidebar();
                 }}
                 className={`thread-item ${isActive ? 'active' : ''}`}
@@ -151,8 +151,8 @@ export default function ThreadSidebar({
           })}
         </div>
 
-        {/* Bookmarks link */}
-        <div className="px-4 py-3 border-t border-white/5">
+        {/* Navigation links */}
+        <div className="px-4 py-3 border-t border-white/5 space-y-1.5">
           <Link
             href="/bookmarks"
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors"
@@ -166,6 +166,33 @@ export default function ThreadSidebar({
             <span style={{ fontSize: '0.85rem' }}>★</span>
             Bookmarks
           </Link>
+          <Link
+            href="/library"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              color: '#7a7580',
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            <span style={{ fontSize: '0.85rem' }}>📚</span>
+            Library
+          </Link>
+          <button
+            onClick={() => {
+              localStorage.removeItem('agora_auth');
+              window.location.reload();
+            }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors w-full"
+            style={{
+              color: '#7a758066',
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '0.6rem',
+            }}
+          >
+            Logout
+          </button>
         </div>
       </aside>
     </>
