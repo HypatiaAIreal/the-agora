@@ -151,6 +151,72 @@ export async function verifyAuth(username, password) {
   return res.json();
 }
 
+// Yoshi
+export async function yoshiRegister(username, password) {
+  const res = await fetch('/api/yoshi/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  return { data: await res.json(), status: res.status };
+}
+
+export async function yoshiLogin(username, password) {
+  const res = await fetch('/api/yoshi/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  return { data: await res.json(), status: res.status };
+}
+
+export async function yoshiSendMessage(text) {
+  const res = await fetch('/api/yoshi/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: text }),
+  });
+  if (!res.ok) throw new Error('Failed to send message');
+  return res.json();
+}
+
+export async function yoshiFetchMessages() {
+  const res = await fetch('/api/yoshi/messages');
+  if (!res.ok) throw new Error('Failed to fetch messages');
+  return res.json();
+}
+
+export async function yoshiFetchContext() {
+  const res = await fetch('/api/yoshi/context');
+  if (!res.ok) throw new Error('Failed to fetch context');
+  return res.json();
+}
+
+export async function yoshiDeleteContext(id) {
+  const res = await fetch('/api/yoshi/context', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id }),
+  });
+  if (!res.ok) throw new Error('Failed to delete context');
+  return res.json();
+}
+
+export async function yoshiSendFeedback(data) {
+  const res = await fetch('/api/yoshi/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function yoshiFetchLibrary() {
+  const res = await fetch('/api/yoshi/library');
+  if (!res.ok) throw new Error('Failed to fetch library');
+  return res.json();
+}
+
 // Translation
 export async function translateText(text, target = 'es') {
   const res = await fetch(`${API_BASE}/translate`, {
