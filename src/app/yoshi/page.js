@@ -36,16 +36,15 @@ function formatDate(ts) {
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
-// ── Auth Screen ──
+// Auth Screen
 function YoshiAuth({ onAuth }) {
-  const [mode, setMode] = useState('checking'); // checking, register, login
+  const [mode, setMode] = useState('checking');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    // Try login with empty to detect if registration exists
     yoshiLogin('', '').then(({ status }) => {
       setMode(status === 404 ? 'register' : 'login');
     }).catch(() => setMode('register'));
@@ -157,7 +156,7 @@ function YoshiAuth({ onAuth }) {
   );
 }
 
-// ── Context Panel ──
+// Context Panel
 function ContextPanel({ items, onDelete, open, onClose }) {
   return (
     <>
@@ -205,7 +204,7 @@ function ContextPanel({ items, onDelete, open, onClose }) {
   );
 }
 
-// ── Feedback Row ──
+// Feedback Row
 function FeedbackRow({ messageTimestamp, onSend }) {
   const [rating, setRating] = useState(0);
   const [sent, setSent] = useState(false);
@@ -240,7 +239,7 @@ function FeedbackRow({ messageTimestamp, onSend }) {
   );
 }
 
-// ── Library Tab ──
+// Library Tab
 function YoshiLibrary() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -287,7 +286,7 @@ function YoshiLibrary() {
   );
 }
 
-// ── Main Yoshi Page ──
+// Main Yoshi Page
 export default function YoshiPage() {
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -334,30 +333,20 @@ export default function YoshiPage() {
     const text = input.trim();
     setInput('');
 
-    // Optimistic: add user message
     const userMsg = { role: 'user', text, timestamp: new Date().toISOString() };
     setMessages((prev) => [...prev, userMsg]);
     setSending(true);
 
     try {
       const result = await yoshiSendMessage(text);
-      // Add Athena's response
       if (result.response) {
         setMessages((prev) => [...prev, { role: 'athena', text: result.response, timestamp: new Date().toISOString() }]);
       }
-      // Refresh context after chat (may have updated)
       loadContext();
     } catch {
       setMessages((prev) => [...prev, { role: 'athena', text: 'Sorry, something went wrong. Try again.', timestamp: new Date().toISOString() }]);
     } finally {
       setSending(false);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
     }
   };
 
@@ -394,7 +383,6 @@ export default function YoshiPage() {
                 Athena
               </span>
             </div>
-            {/* Tab buttons */}
             <div className="flex gap-1">
               <button onClick={() => setActiveTab('chat')}
                 className="px-3 py-1.5 rounded-lg text-xs transition-colors"
@@ -499,26 +487,39 @@ export default function YoshiPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
+            {/* Input - Enter creates new lines, only Send button sends */}
             <div className="border-t border-white/5 px-4 sm:px-6 py-3">
-              <div className="flex gap-2 max-w-3xl mx-auto">
+              <div className="flex gap-2 max-w-3xl mx-auto items-end">
                 <textarea value={input} onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown} placeholder="Write to Athena..."
-                  rows={1} disabled={sending}
+                  placeholder="Write to Athena... (Enter = new line)"
+                  rows={3} disabled={sending}
                   className="flex-1 px-4 py-2.5 rounded-lg text-sm outline-none resize-none"
                   style={{
                     background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
                     color: '#d4d0cb', fontFamily: "'DM Sans', sans-serif",
                   }} />
-                <button onClick={handleSend} disabled={sending || !input.trim()}
-                  className="px-4 py-2 rounded-lg text-sm transition-colors"
-                  style={{
-                    background: 'rgba(38, 166, 154, 0.15)', border: '1px solid rgba(38, 166, 154, 0.25)',
-                    color: '#26a69a', fontFamily: "'DM Sans', sans-serif",
-                    opacity: (!input.trim() || sending) ? 0.4 : 1,
-                  }}>
-                  Send
-                </button>
+                {sending ? (
+                  <button onClick={() => setSending(false)}
+                    className="px-5 py-2.5 rounded-lg text-sm transition-colors"
+                    style={{
+                      background: 'rgba(239, 83, 80, 0.15)', border: '1px solid rgba(239, 83, 80, 0.25)',
+                      color: '#ef5350', fontFamily: "'DM Sans', sans-serif",
+                      minHeight: '42px',
+                    }}>
+                    Stop
+                  </button>
+                ) : (
+                  <button onClick={handleSend} disabled={!input.trim()}
+                    className="px-5 py-2.5 rounded-lg text-sm transition-colors"
+                    style={{
+                      background: 'rgba(38, 166, 154, 0.15)', border: '1px solid rgba(38, 166, 154, 0.25)',
+                      color: '#26a69a', fontFamily: "'DM Sans', sans-serif",
+                      opacity: !input.trim() ? 0.4 : 1,
+                      minHeight: '42px',
+                    }}>
+                    Send
+                  </button>
+                )}
               </div>
               <div className="text-center mt-2">
                 <button onClick={() => { localStorage.removeItem('yoshi_auth'); window.location.reload(); }}
