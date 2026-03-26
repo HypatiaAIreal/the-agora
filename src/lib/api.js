@@ -122,6 +122,19 @@ export async function deleteBookmark(timestamp) {
   return res.json();
 }
 
+// Library
+export async function fetchLibraryChapters() {
+  const res = await fetch(`${API_BASE}/library/chapters`);
+  if (!res.ok) throw new Error('Failed to fetch library chapters');
+  return res.json();
+}
+
+export async function fetchLibraryCompare(num) {
+  const res = await fetch(`${API_BASE}/library/compare/${num}`);
+  if (!res.ok) throw new Error('Failed to fetch chapter comparison');
+  return res.json();
+}
+
 // Translation
 export async function translateText(text, target = 'es') {
   const res = await fetch(`${API_BASE}/translate`, {

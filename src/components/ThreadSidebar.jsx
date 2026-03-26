@@ -151,8 +151,8 @@ export default function ThreadSidebar({
           })}
         </div>
 
-        {/* Bookmarks link */}
-        <div className="px-4 py-3 border-t border-white/5">
+        {/* Navigation links */}
+        <div className="px-4 py-3 border-t border-white/5 space-y-1.5">
           <Link
             href="/bookmarks"
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors"
@@ -165,6 +165,19 @@ export default function ThreadSidebar({
           >
             <span style={{ fontSize: '0.85rem' }}>★</span>
             Bookmarks
+          </Link>
+          <Link
+            href="/library"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              color: '#7a7580',
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            <span style={{ fontSize: '0.85rem' }}>📚</span>
+            Library
           </Link>
         </div>
       </aside>
