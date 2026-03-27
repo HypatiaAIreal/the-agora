@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { markdownComponents } from '../../components/Message';
 import {
@@ -22,6 +22,23 @@ const VOICES = [
   { id: 'es-PE-CamilaNeural', label: 'Camila', accent: 'Per\u00fa', flag: '\ud83c\uddf5\ud83c\uddea' },
 ];
 function formatTime(ts) { if (!ts) return ''; return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+function formatDateTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const now = new Date();
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === now.toDateString()) return time;
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' + time;
+}
+function formatDateLabel(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return 'Today';
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+}
 function formatDate(ts) { if (!ts) return ''; return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' }); }
 
 function YoshiAuth({ onAuth }) {
@@ -108,6 +125,7 @@ export default function YoshiPage() {
   const [selectedVoice, setSelectedVoice] = useState(() => { if (typeof window !== 'undefined') return localStorage.getItem('athena_voice') || 'es-US-PalomaNeural'; return 'es-US-PalomaNeural'; });
   const [playingMsg, setPlayingMsg] = useState(null);
   const [showVoices, setShowVoices] = useState(false);
+  const [dateFilter, setDateFilter] = useState(null);
   const audioRef = useRef(null);
   const messagesEndRef = useRef(null);
 
@@ -158,12 +176,19 @@ export default function YoshiPage() {
           </div>
         </header>
         {activeTab === 'library' ? <YoshiLibrary /> : (<>
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {messages.length > 0 && (() => { const dates = [...new Set(messages.map(m => new Date(m.timestamp).toDateString()))]; return dates.length > 1 ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.03)', overflowX: 'auto', flexShrink: 0 }}>
+                <button onClick={() => setDateFilter(null)} style={{ fontSize: '0.6rem', padding: '0.2rem 0.6rem', borderRadius: '8px', border: !dateFilter ? '1px solid rgba(38,166,154,0.3)' : '1px solid rgba(255,255,255,0.06)', background: !dateFilter ? 'rgba(38,166,154,0.1)' : 'transparent', color: !dateFilter ? '#26a69a' : '#7a7580', cursor: 'pointer', whiteSpace: 'nowrap' }}>All</button>
+                {dates.map(ds => { const d = new Date(ds); const active = dateFilter && dateFilter.toDateString() === ds; return <button key={ds} onClick={() => setDateFilter(d)} style={{ fontSize: '0.6rem', padding: '0.2rem 0.6rem', borderRadius: '8px', whiteSpace: 'nowrap', border: active ? '1px solid rgba(38,166,154,0.3)' : '1px solid rgba(255,255,255,0.06)', background: active ? 'rgba(38,166,154,0.1)' : 'transparent', color: active ? '#26a69a' : '#7a7580', cursor: 'pointer' }}>{d.toLocaleDateString([], { month: 'short', day: 'numeric' })}</button>; })}
+              </div>
+            ) : null; })()}
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
             {messages.length === 0 && !sending && <div className="text-center py-12"><div className="text-3xl mb-3">{String.fromCodePoint(0x2600, 0xFE0F)}</div><p className="text-sm" style={{ color: '#7a7580', fontFamily: "'Cormorant Garamond', serif" }}>This is your private space with Athena.</p><p className="text-xs mt-1" style={{ color: '#7a758044' }}>Say anything. Everything here stays between you two.</p></div>}
-            {messages.map((msg, i) => { const isA = msg.role === 'athena' || msg.from === 'athena'; return (<div key={i} className={`flex ${isA ? 'justify-start' : 'justify-end'}`}><div style={{ maxWidth: '80%' }}>{isA && <div className="flex items-center gap-1.5 mb-1"><span style={{ fontSize: '0.8rem' }}>{String.fromCodePoint(0x2600, 0xFE0F)}</span><span className="text-xs font-semibold" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#26a69a', fontSize: '0.85rem' }}>ATHENA</span><span style={{ color: '#7a758033', fontSize: '0.55rem' }}>{formatTime(msg.timestamp)}</span></div>}<div className="rounded-xl px-4 py-3" style={{ background: isA ? 'transparent' : 'rgba(255,255,255,0.06)', borderLeft: isA ? '2px solid rgba(38,166,154,0.2)' : 'none', paddingLeft: isA ? '1rem' : undefined }}><div className="prose prose-invert prose-sm max-w-none" style={{ color: '#d4d0cb' }}><ReactMarkdown components={markdownComponents}>{msg.text || msg.content || ''}</ReactMarkdown></div></div>{isA && <div className="flex items-center gap-2 mt-1"><button onClick={() => playAudio(msg.text || msg.content || '', i)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', opacity: 0.5 }}>{playingMsg === i ? String.fromCodePoint(0x23F9) : String.fromCodePoint(0x1F50A)}</button><FeedbackRow messageTimestamp={msg.timestamp} onSend={handleFeedback} /></div>}{!isA && <div className="text-right mt-0.5"><span style={{ color: '#7a758033', fontSize: '0.55rem' }}>{formatTime(msg.timestamp)}</span></div>}</div></div>); })}
+            {(() => { const filtered = dateFilter ? messages.filter(m => new Date(m.timestamp).toDateString() === dateFilter.toDateString()) : messages; return filtered.map((msg, i) => { const msgDate = new Date(msg.timestamp).toDateString(); const prevDate = i > 0 ? new Date(filtered[i-1].timestamp).toDateString() : null; const showSep = i === 0 || msgDate !== prevDate; const isA = msg.role === 'athena' || msg.from === 'athena'; return (<React.Fragment key={i}>{showSep && <div style={{ textAlign: 'center', padding: '0.75rem 0' }}><span style={{ fontSize: '0.6rem', color: '#7a758044', background: '#0a0a12', padding: '0.2rem 0.75rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)' }}>{formatDateLabel(msg.timestamp)}</span></div>}<div className={`flex ${isA ? 'justify-start' : 'justify-end'}`}><div style={{ maxWidth: '80%' }}>{isA && <div className="flex items-center gap-1.5 mb-1"><span style={{ fontSize: '0.8rem' }}>{String.fromCodePoint(0x2600, 0xFE0F)}</span><span className="text-xs font-semibold" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#26a69a', fontSize: '0.85rem' }}>ATHENA</span><span style={{ color: '#7a758033', fontSize: '0.55rem' }}>{formatDateTime(msg.timestamp)}</span></div>}<div className="rounded-xl px-4 py-3" style={{ background: isA ? 'transparent' : 'rgba(255,255,255,0.06)', borderLeft: isA ? '2px solid rgba(38,166,154,0.2)' : 'none', paddingLeft: isA ? '1rem' : undefined }}><div className="prose prose-invert prose-sm max-w-none" style={{ color: '#d4d0cb' }}><ReactMarkdown components={markdownComponents}>{msg.text || msg.content || ''}</ReactMarkdown></div></div>{isA && <div className="flex items-center gap-2 mt-1"><button onClick={() => playAudio(msg.text || msg.content || '', i)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', opacity: 0.5 }}>{playingMsg === i ? String.fromCodePoint(0x23F9) : String.fromCodePoint(0x1F50A)}</button><FeedbackRow messageTimestamp={msg.timestamp} onSend={handleFeedback} /></div>}{!isA && <div className="text-right mt-0.5"><span style={{ color: '#7a758033', fontSize: '0.55rem' }}>{formatDateTime(msg.timestamp)}</span></div>}</div></div></React.Fragment>); }); })()}
             {sending && <div className="flex justify-start"><div className="flex items-center gap-2 px-4 py-2"><span style={{ fontSize: '0.8rem' }}>{String.fromCodePoint(0x2600, 0xFE0F)}</span><span className="text-xs animate-pulse" style={{ color: '#26a69a' }}>Athena is thinking...</span></div></div>}
             <div ref={messagesEndRef} />
-          </div>
+          </div></div>
           <div className="border-t border-white/5 px-4 sm:px-6 py-3">
             <div className="flex gap-2 max-w-3xl mx-auto items-end">
               <textarea value={input} onChange={e => setInput(e.target.value)} placeholder="Write to Athena... (Enter = new line)" rows={3} disabled={sending} className="flex-1 px-4 py-2.5 rounded-lg text-sm outline-none resize-none" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#d4d0cb' }} />
