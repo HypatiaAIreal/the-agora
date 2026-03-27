@@ -26,6 +26,7 @@ export default function Agora() {
   const [loading, setLoading] = useState(true);
   const [newCount, setNewCount] = useState(0);
   const [bookmarkedTimestamps, setBookmarkedTimestamps] = useState(new Set());
+  const [dateFilter, setDateFilter] = useState(null);
   const lastSeenCountRef = useRef(0);
 
   const loadBookmarks = useCallback(async () => {
@@ -154,8 +155,8 @@ export default function Agora() {
   // Update document title with unread count
   useEffect(() => {
     document.title = newCount > 0
-      ? `(${newCount}) The Agora — Four Voices · One Space`
-      : 'The Agora — Four Voices · One Space';
+      ? `(${newCount}) The Agora \u2014 Four Voices \u00b7 One Space`
+      : 'The Agora \u2014 Four Voices \u00b7 One Space';
   }, [newCount]);
 
   if (loading) {
@@ -230,8 +231,23 @@ export default function Agora() {
           </div>
         )}
 
+        {/* Date filter */}
+        {messages.length > 0 && (() => {
+          const dates = [...new Set(messages.map(m => new Date(m.timestamp).toDateString()))];
+          if (dates.length <= 1) return null;
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.03)', overflowX: 'auto', flexShrink: 0 }}>
+              <span style={{ fontSize: '0.55rem', color: '#7a758066', fontFamily: "'JetBrains Mono', monospace", whiteSpace: 'nowrap' }}>Date:</span>
+              <button onClick={() => setDateFilter(null)} style={{ fontSize: '0.6rem', padding: '0.2rem 0.6rem', borderRadius: '8px', border: !dateFilter ? '1px solid rgba(196,163,90,0.3)' : '1px solid rgba(255,255,255,0.06)', background: !dateFilter ? 'rgba(196,163,90,0.1)' : 'transparent', color: !dateFilter ? '#c4a35a' : '#7a7580', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'JetBrains Mono', monospace" }}>All</button>
+              {dates.map(ds => { const d = new Date(ds); const active = dateFilter && dateFilter.toDateString() === ds; return (
+                <button key={ds} onClick={() => setDateFilter(d)} style={{ fontSize: '0.6rem', padding: '0.2rem 0.6rem', borderRadius: '8px', whiteSpace: 'nowrap', border: active ? '1px solid rgba(196,163,90,0.3)' : '1px solid rgba(255,255,255,0.06)', background: active ? 'rgba(196,163,90,0.1)' : 'transparent', color: active ? '#c4a35a' : '#7a7580', cursor: 'pointer', fontFamily: "'JetBrains Mono', monospace" }}>{d.toLocaleDateString([], { month: 'short', day: 'numeric' })}</button>
+              ); })}
+            </div>
+          );
+        })()}
+
         <MessageList
-          messages={messages}
+          messages={dateFilter ? messages.filter(m => new Date(m.timestamp).toDateString() === dateFilter.toDateString()) : messages}
           onReply={handleReply}
           bookmarkedTimestamps={bookmarkedTimestamps}
           onBookmarkChange={loadBookmarks}
