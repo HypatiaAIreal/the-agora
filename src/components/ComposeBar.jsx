@@ -12,6 +12,7 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
   const [showProjectInput, setShowProjectInput] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [tags, setTags] = useState([]);
+  const [expanded, setExpanded] = useState(false);
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
     setSelectedProject('');
     setShowProjectInput(false);
     setNewProjectName('');
+    setExpanded(false);
     textareaRef.current?.focus();
   };
 
@@ -90,7 +92,7 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
             }}
           >
             <span style={{ color: (VOICES[replyTo.from] || VOICES.carles).color }}>
-              ↩ Replying to {(VOICES[replyTo.from] || VOICES.carles).name}:
+              {String.fromCodePoint(0x21A9)} Replying to {(VOICES[replyTo.from] || VOICES.carles).name}:
             </span>
             <span className="truncate flex-1" style={{ color: '#7a7580' }}>
               {replyTo.text.slice(0, 80)}{replyTo.text.length > 80 ? '...' : ''}
@@ -112,14 +114,36 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
             border: `1px solid ${voice.color}22`,
           }}
         >
+          {/* Expand toggle */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.25rem' }}>
+            <button
+              onClick={() => { setExpanded(!expanded); setTimeout(() => textareaRef.current?.focus(), 50); }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.6rem',
+                color: expanded ? voice.color : '#7a758044',
+                fontFamily: "'JetBrains Mono', monospace",
+                padding: '0.15rem 0.4rem',
+                borderRadius: '4px',
+                transition: 'color 0.15s',
+              }}
+              title={expanded ? 'Collapse editor' : 'Expand editor'}
+            >
+              {expanded ? String.fromCodePoint(0x25B2) + ' collapse' : String.fromCodePoint(0x25BC) + ' expand'}
+            </button>
+          </div>
+
           <textarea
             ref={textareaRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`Speak as ${voice.name}...`}
-            rows={2}
+            rows={expanded ? 12 : 2}
             className="compose-textarea"
+            style={expanded ? { minHeight: '250px', transition: 'min-height 0.2s' } : { transition: 'min-height 0.2s' }}
           />
 
           {/* Bottom bar: tags + send */}
@@ -163,7 +187,7 @@ export default function ComposeBar({ activeVoice, onVoiceChange, onSend, replyTo
                       border: isActive ? `1px solid ${p.color || '#26a69a'}44` : '1px solid transparent',
                     }}
                   >
-                    📁 {p.name}
+                    {String.fromCodePoint(0x1F4C1)} {p.name}
                   </button>
                 );
               })}
